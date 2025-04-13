@@ -68,9 +68,9 @@ exports.getExamById = async (req, res) => {
 
 exports.submitExam = async (req, res) => {
     try {
-        const { examId, answers } = req.body;
+        const { examId, answers, autoSubmitted, tabSwitches, duration } = req.body;
         
-        
+        // Check if user has already submitted this exam
         const existingResult = await Result.findOne({
             user: req.user.id,
             exam: examId
@@ -100,11 +100,15 @@ exports.submitExam = async (req, res) => {
             user: req.user.id, 
             exam: examId, 
             score, 
-            passed 
+            passed,
+            autoSubmitted: autoSubmitted || false,
+            tabSwitches: tabSwitches || 0,
+            duration: duration || 0,
+            completedAt: new Date()
         });
         
         await result.save();
-        res.json({ score, passed });
+        res.json({ score, passed, autoSubmitted });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

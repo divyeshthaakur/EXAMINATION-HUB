@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Exam = () => {
     const { id } = useParams();
@@ -10,6 +12,206 @@ const Exam = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const role = localStorage.getItem('role');
+    const [tabSwitches, setTabSwitches] = useState(0);
+    const examStartTime = useRef(Date.now());
+    const toastIds = useRef({
+        copyPaste: null,
+        rightClick: null,
+        tabSwitch: null,
+        keyboardShortcut: null
+    });
+    const isAutoSubmitting = useRef(false);
+    const countdownInterval = useRef(null);
+    const modalDiv = useRef(null);
+    
+    // Function to show a toast with ID to prevent duplicates
+    const showToast = (type, message, options = {}) => {
+        // Skip if already auto-submitting
+        if (isAutoSubmitting.current) return;
+        
+        // If a toast with this ID already exists, dismiss it first
+        if (toastIds.current[type]) {
+            toast.dismiss(toastIds.current[type]);
+        }
+        
+        // Show the new toast and store its ID
+        toastIds.current[type] = toast.error(message, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            ...options
+        });
+    };
+    
+    // Function to handle tab visibility change
+    const handleVisibilityChange = () => {
+        // Skip if already auto-submitting or if user is not a student
+        if (isAutoSubmitting.current || role !== 'student') return;
+        
+        if (document.hidden) {
+            // User is leaving the tab
+            setTabSwitches(prev => {
+                const newCount = prev + 1;
+                
+                // Show toast notification with unique ID
+                showToast('tabSwitch', `Warning: You've switched tabs ${newCount}/3 times. After 3 switches, your exam will be submitted automatically.`, {
+                    autoClose: 3000
+                });
+                
+                // If reached limit, auto-submit
+                if (newCount >= 3) {
+                    // Set auto-submitting flag to prevent more toasts
+                    isAutoSubmitting.current = true;
+                    
+                    // Show a modal-like message before auto-submitting
+                    modalDiv.current = document.createElement('div');
+                    modalDiv.current.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                    modalDiv.current.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+                            <h3 class="text-xl font-bold text-red-600 mb-4">Exam Auto-Submitted</h3>
+                            <p class="mb-4">Your exam has been automatically submitted due to switching tabs 3 times.</p>
+                            <p class="text-sm text-gray-500">You will be redirected to the results page in <span id="countdown">10</span> seconds.</p>
+                        </div>
+                    `;
+                    document.body.appendChild(modalDiv.current);
+                    
+                    // Start countdown
+                    let countdown = 10;
+                    const countdownElement = document.getElementById('countdown');
+                    
+                    // Clear any existing interval
+                    if (countdownInterval.current) {
+                        clearInterval(countdownInterval.current);
+                    }
+                    
+                    countdownInterval.current = setInterval(() => {
+                        countdown--;
+                        if (countdownElement) {
+                            countdownElement.textContent = countdown;
+                        }
+                        
+                        if (countdown <= 0) {
+                            clearInterval(countdownInterval.current);
+                            // Force a re-render to ensure navigation happens
+                            setTimeout(() => {
+                                handleAutoSubmit();
+                            }, 100);
+                        }
+                    }, 1000);
+                }
+                
+                return newCount;
+            });
+        }
+    };
+    
+    // Function to handle auto-submission
+    const handleAutoSubmit = async () => {
+        try {
+            // Clear any existing countdown interval
+            if (countdownInterval.current) {
+                clearInterval(countdownInterval.current);
+            }
+            
+            // Remove the modal if it exists
+            if (modalDiv.current && modalDiv.current.parentNode) {
+                modalDiv.current.parentNode.removeChild(modalDiv.current);
+            }
+            
+            const token = localStorage.getItem('token');
+            await axios.post('http://localhost:5000/api/exams/submit', 
+                { 
+                    examId: id, 
+                    answers,
+                    autoSubmitted: true,
+                    tabSwitches: tabSwitches,
+                    duration: Math.floor((Date.now() - examStartTime.current) / 1000) // Duration in seconds
+                }, 
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            
+            toast.info("Your exam has been submitted automatically due to multiple tab switches.", {
+                position: "top-center",
+                autoClose: 3000,
+            });
+            
+            // Force navigation to results page
+            window.location.href = '/results';
+        } catch (error) {
+            console.error('Error auto-submitting exam:', error);
+            toast.error("Failed to submit exam automatically. Please try again.");
+        }
+    };
+    
+    // Function to handle copy-paste prevention
+    const preventCopyPaste = (e) => {
+        // Skip if user is not a student
+        if (role !== 'student') return;
+        
+        e.preventDefault();
+        showToast('copyPaste', "Copy-paste is not allowed during the exam!");
+        return false;
+    };
+    
+    // Function to handle right-click prevention
+    const preventRightClick = (e) => {
+        // Skip if user is not a student
+        if (role !== 'student') return;
+        
+        e.preventDefault();
+        showToast('rightClick', "Right-click is not allowed during the exam!");
+        return false;
+    };
+    
+    // Function to handle keyboard shortcuts
+    const preventKeyboardShortcuts = (e) => {
+        // Skip if already auto-submitting or if user is not a student
+        if (isAutoSubmitting.current || role !== 'student') return;
+        
+        // Prevent Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) {
+            e.preventDefault();
+            showToast('keyboardShortcut', "Keyboard shortcuts are not allowed during the exam!");
+        }
+    };
+    
+    useEffect(() => {
+        // Add event listeners for anti-cheating measures
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        document.addEventListener('copy', preventCopyPaste);
+        document.addEventListener('paste', preventCopyPaste);
+        document.addEventListener('cut', preventCopyPaste);
+        document.addEventListener('contextmenu', preventRightClick);
+        document.addEventListener('keydown', preventKeyboardShortcuts);
+        
+        // Clean up event listeners
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener('copy', preventCopyPaste);
+            document.removeEventListener('paste', preventCopyPaste);
+            document.removeEventListener('cut', preventCopyPaste);
+            document.removeEventListener('contextmenu', preventRightClick);
+            document.removeEventListener('keydown', preventKeyboardShortcuts);
+            
+            // Clear any existing countdown interval
+            if (countdownInterval.current) {
+                clearInterval(countdownInterval.current);
+            }
+            
+            // Remove the modal if it exists
+            if (modalDiv.current && modalDiv.current.parentNode) {
+                modalDiv.current.parentNode.removeChild(modalDiv.current);
+            }
+            
+            // Dismiss all toasts when component unmounts
+            Object.values(toastIds.current).forEach(id => {
+                if (id) toast.dismiss(id);
+            });
+        };
+    }, []);
     
     useEffect(() => {
         const fetchExam = async () => {
@@ -48,25 +250,45 @@ const Exam = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.post('http://localhost:5000/api/exams/submit', 
-                { examId: id, answers }, 
+                { 
+                    examId: id, 
+                    answers,
+                    duration: Math.floor((Date.now() - examStartTime.current) / 1000) // Duration in seconds
+                }, 
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             
-            alert('Exam submitted successfully!');
+            toast.success('Exam submitted successfully!', {
+                position: "top-center",
+                autoClose: 2000,
+            });
+            
             navigate('/results');
         } catch (error) {
             console.error('Error submitting exam:', error);
             
             if (error.response && error.response.data) {
-                alert(error.response.data.message || 'Failed to submit exam');
+                toast.error(error.response.data.message || 'Failed to submit exam', {
+                    position: "top-center",
+                    autoClose: 3000,
+                });
             } else {
-                alert('Network error. Please try again.');
+                toast.error('Network error. Please try again.', {
+                    position: "top-center",
+                    autoClose: 3000,
+                });
             }
         }
     };
     
     if (loading) {
-        return <div className="text-center py-8">Loading exam...</div>;
+        return (
+            <div className="text-center py-8">
+                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading exam...</p>
+                <ToastContainer />
+            </div>
+        );
     }
     
     if (error) {
@@ -74,12 +296,21 @@ const Exam = () => {
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-4">
                 <p>{error}</p>
                 <p className="mt-2">Redirecting to your results page...</p>
+                <ToastContainer />
             </div>
         );
     }
     
     return (
         <div className='min-h-[55vh]'>
+            <ToastContainer limit={1} />
+            {role === 'student' && (
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
+                    <p className="font-bold">Exam Security Notice:</p>
+                    <p>Copy-paste, right-click, and tab switching are disabled. You have {3 - tabSwitches} tab switches remaining.</p>
+                </div>
+            )}
+            
             {exam && (
                 <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
                     <h2 className="text-xl font-bold mb-4">{exam.title}</h2>
@@ -113,13 +344,8 @@ const Exam = () => {
                         Submit Exam
                     </button>
                     :
-                    // <button 
-                    //     type="submit" 
-                    //     className="bg-red-600 hover:bg-red-700 text-white p-2 rounded transition"
-                    //     disabled
-                    // >
                     <button className='bg-red-500 text-white p-2 rounded transition' disabled>Author can't Attempt</button>
-                }
+                    }
                 </form>
             )}
         </div>

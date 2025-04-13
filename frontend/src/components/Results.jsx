@@ -22,12 +22,14 @@ const Results = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
-                // Get all exam IDs from the results
-                const examIds = [...new Set(resultsResponse.data.map(result => result.exam))];
+                // Filter out results with null exam data
+                const validResults = resultsResponse.data.filter(result => result && result.exam);
                 
+                if (validResults.length !== resultsResponse.data.length) {
+                    console.warn('Some results had missing exam data and were filtered out');
+                }
                 
-                
-                setResults(resultsResponse.data);
+                setResults(validResults);
                 setLoading(false);
             } catch (err) {
                 setError('Failed to load your results. Please try again later.');
@@ -40,6 +42,10 @@ const Results = () => {
     }, []);
 
     const calculatePercentage = (result) => {
+        // Add null check for result.exam
+        if (!result || !result.exam || !result.exam.questions) {
+            return 0;
+        }
         
         const totalQuestions = result.exam.questions.length;
         if (totalQuestions === 0) return 0;
@@ -48,17 +54,19 @@ const Results = () => {
     };
 
     const getExamTitle = (result) => {
-        if (result) {
-            return result.exam.title;
+        // Add null check for result.exam
+        if (!result || !result.exam) {
+            return "Unknown Exam";
         }
-        return "Unknown Exam";
+        return result.exam.title || "Untitled Exam";
     };
 
     const getQuestionCount = (result) => {
-        if (result) {
-            return result.exam.questions.length;
+        // Add null check for result.exam
+        if (!result || !result.exam || !result.exam.questions) {
+            return 0;
         }
-        return 0;
+        return result.exam.questions.length;
     };
 
     const downloadCertificate = (resultId) => {
@@ -112,14 +120,17 @@ const Results = () => {
         );
     }
 
-    if (error && results.length === 0) {
+    if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="bg-red-100 text-red-700 p-4 rounded-lg max-w-md text-center">
-                    <p>{error}</p>
+                <div className="text-center">
+                    <div className="text-red-500 mb-4">
+                        <XCircle size={48} className="mx-auto" />
+                    </div>
+                    <p className="text-gray-600">{error}</p>
                     <button 
                         onClick={() => window.location.reload()} 
-                        className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
                     >
                         Try Again
                     </button>
@@ -129,8 +140,8 @@ const Results = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-4xl mx-auto px-4">
                 <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
                         <div className="flex items-center">
@@ -197,8 +208,13 @@ const Results = () => {
                                             <div className="p-4 bg-white border-t border-gray-200">
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <div className="text-sm text-gray-500">Completion time: {result.duration || 'N/A'}</div>
+                                                        <div className="text-sm text-gray-500">Completion time: {result.duration ? `${Math.floor(result.duration / 60)}m ${result.duration % 60}s` : 'N/A'}</div>
                                                         <div className="text-sm text-gray-500">Questions: {totalQuestions}</div>
+                                                        {result.autoSubmitted && (
+                                                            <div className="text-sm text-red-500 mt-1">
+                                                                <span className="font-semibold">Auto-submitted</span> due to multiple tab switches ({result.tabSwitches} switches)
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     
                                                     {result.passed && (

@@ -13,6 +13,10 @@ const resultSchema = new mongoose.Schema({
     },
     score: { type: Number, required: true },
     passed: { type: Boolean, required: true },
+    autoSubmitted: { type: Boolean, default: false },
+    tabSwitches: { type: Number, default: 0 },
+    duration: { type: Number, default: 0 }, // Duration in seconds
+    completedAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Result', resultSchema);
