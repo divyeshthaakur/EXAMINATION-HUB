@@ -25,11 +25,11 @@ const Navbar = () => {
     }
 
     const isActive = (path) => {
-        return location.pathname === path ? 'text-indigo-200 border-b-2 border-indigo-200' : 'text-white hover:text-indigo-200';
+        return location.pathname === path ? 'text-blue-200 border-b-2 border-blue-200' : 'text-white hover:text-blue-200';
     };
 
     return (
-        <nav className="bg-gradient-to-r from-indigo-700 to-indigo-600 shadow-lg">
+        <nav className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 shadow-lg">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center">
@@ -37,7 +37,7 @@ const Navbar = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="ml-2 text-xl font-bold text-white">Examify</span>
+                            <span className="ml-2 text-xl font-bold text-white">Examination Hub</span>
                         </Link>
                     </div>
 
@@ -63,7 +63,7 @@ const Navbar = () => {
                                 className="flex items-center text-white focus:outline-none"
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                             >
-                                <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
+                                <div className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center text-white font-semibold">
                                     {username.charAt(0).toUpperCase()}
                                 </div>
                                 <span className="ml-2">{username}</span>
@@ -78,7 +78,7 @@ const Navbar = () => {
                                     </div>
                                     <button 
                                         onClick={handleLogout}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center"
                                     >
                                         <LogOut size={16} className="mr-2" />
                                         Sign out
@@ -96,10 +96,10 @@ const Navbar = () => {
                 </div>
                 
                 {isMenuOpen && (
-                    <div className="md:hidden mt-3 py-3 border-t border-indigo-500">
+                    <div className="md:hidden mt-3 py-3 border-t border-blue-400">
                         <Link 
                             to="/dashboard" 
-                            className="block py-2 text-white hover:bg-indigo-600 px-3 rounded"
+                            className="block py-2 text-white hover:bg-blue-600 px-3 rounded"
                             onClick={() => setIsMenuOpen(false)}
                         >
                             Dashboard
@@ -108,7 +108,7 @@ const Navbar = () => {
                         {role === 'examiner' && (
                             <Link 
                                 to="/create-exam" 
-                                className="block py-2 text-white hover:bg-indigo-600 px-3 rounded"
+                                className="block py-2 text-white hover:bg-blue-600 px-3 rounded"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 Create Exam
@@ -118,20 +118,20 @@ const Navbar = () => {
                         {role !== 'examiner' && (
                             <Link 
                                 to="/results" 
-                                className="block py-2 text-white hover:bg-indigo-600 px-3 rounded"
+                                className="block py-2 text-white hover:bg-blue-600 px-3 rounded"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 Results
                             </Link>
                         )}
                         
-                        <div className="mt-3 pt-3 border-t border-indigo-500">
-                            <div className="px-3 py-2 text-indigo-200">
+                        <div className="mt-3 pt-3 border-t border-blue-400">
+                            <div className="px-3 py-2 text-blue-200">
                                 <div>Signed in as <span className="font-bold">{username}</span></div>
                             </div>
                             <button 
                                 onClick={handleLogout}
-                                className="w-full text-left px-3 py-2 text-white hover:bg-indigo-600 rounded flex items-center"
+                                className="w-full text-left px-3 py-2 text-white hover:bg-blue-600 rounded flex items-center"
                             >
                                 <LogOut size={16} className="mr-2" />
                                 Sign out

@@ -3,7 +3,11 @@ const Result = require('../models/Result');
 const mongoose = require('mongoose');
 
 exports.createExam = async (req, res) => {
-    const exam = new Exam({ ...req.body, createdBy: req.user.id });
+    const exam = new Exam({ 
+        ...req.body, 
+        createdBy: req.user.id,
+        status: 'active' // Set default status to active
+    });
     try {
         await exam.save();
         res.status(201).json(exam);
@@ -14,21 +18,19 @@ exports.createExam = async (req, res) => {
 
 exports.getExams = async (req, res) => {
     try {
-        
         if (req.user.role === 'examiner') {
             const exams = await Exam.find({ createdBy: req.user.id });
             return res.json(exams);
         } else {
-          
             const completedExams = await Result.find({ user: req.user.id })
                 .select('exam')
                 .lean();
                 
             const completedExamIds = completedExams.map(result => result.exam);
             
-           
             const availableExams = await Exam.find({
-                _id: { $nin: completedExamIds }
+                _id: { $nin: completedExamIds },
+                status: 'active' // Only show active exams to students
             });
             
             return res.json(availableExams);
@@ -90,7 +92,8 @@ exports.submitExam = async (req, res) => {
         
         let score = 0;
         exam.questions.forEach((question, index) => {
-            if (question.answer === answers[index]) {
+            // Compare the selected answer with the correct answer
+            if (answers[index] && question.answer === answers[index]) {
                 score++;
             }
         });
@@ -136,6 +139,30 @@ exports.getAllExams = async (req, res) => {
         
         const exams = await Exam.find({});
         res.json(exams);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.toggleExamStatus = async (req, res) => {
+    try {
+        if (req.user.role !== 'examiner') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const exam = await Exam.findById(req.params.id);
+        if (!exam) {
+            return res.status(404).json({ message: 'Exam not found' });
+        }
+
+        if (exam.createdBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to modify this exam' });
+        }
+
+        exam.status = exam.status === 'active' ? 'inactive' : 'active';
+        await exam.save();
+
+        res.json(exam);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

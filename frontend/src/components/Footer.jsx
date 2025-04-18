@@ -4,7 +4,7 @@ export const Footer = () => {
       <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
         
         <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Examify</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Examination Hub</h2>
           <p className="text-sm">
             Your trusted online exam platform providing seamless, secure, and efficient examination solutions.
           </p>
@@ -51,8 +51,8 @@ export const Footer = () => {
 
       
       <div className="border-t border-gray-700 mt-10 pt-6 text-center text-sm">
-        <p>&copy; {new Date().getFullYear()} Examify. All rights reserved.</p>
-        <p>Built with ❤️ by Examify Team.</p>
+        <p>&copy; {new Date().getFullYear()} Examination Hub. All rights reserved.</p>
+        {/* <p>Built with ❤️ by Divyesh Thakur.</p> */}
       </div>
     </footer>
   );

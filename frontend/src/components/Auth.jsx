@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { BookOpen, User, Lock, ArrowRight } from 'lucide-react';
 
 const Auth = () => {
     const [username, setUsername] = useState('');
@@ -22,7 +24,6 @@ const Auth = () => {
             if (isRegistering) {
                 setSuccessMessage('Registration successful! You can now log in.');
             } else {
-                // Save token, role, and username to localStorage
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('role', response.data.role);
                 localStorage.setItem('username', response.data.username);
@@ -35,63 +36,114 @@ const Auth = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg">
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-                    {isRegistering ? 'Register' : 'Login'}
-                </h2>
-                {error && (
-                    <div className="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
-                        {error}
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4"
+        >
+            <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="w-full max-w-md"
+            >
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-blue-100">
+                    <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-6 py-8 text-center">
+                        <div className="inline-block bg-white/20 text-white px-4 py-2 rounded-full mb-4">
+                            <span className="flex items-center text-sm font-medium">
+                                <BookOpen size={16} className="mr-2" />
+                                {isRegistering ? 'Create Account' : 'Welcome Back'}
+                            </span>
+                        </div>
+                        <h2 className="text-3xl font-bold text-white">
+                            {isRegistering ? 'Join Examination Hub' : 'Sign In'}
+                        </h2>
                     </div>
-                )}
-                {successMessage && (
-                    <div className="mb-4 p-3 text-sm text-green-700 bg-green-100 rounded-lg">
-                        {successMessage}
+
+                    <div className="p-6">
+                        {error && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-4 p-3 text-sm text-red-700 bg-red-50/80 rounded-lg border border-red-100"
+                            >
+                                {error}
+                            </motion.div>
+                        )}
+                        {successMessage && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-4 p-3 text-sm text-green-700 bg-green-50/80 rounded-lg border border-green-100"
+                            >
+                                {successMessage}
+                            </motion.div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-blue-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                    className="w-full pl-10 pr-4 py-3 border border-blue-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition bg-white/50"
+                                />
+                            </div>
+
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-blue-400" />
+                                </div>
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="w-full pl-10 pr-4 py-3 border border-blue-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition bg-white/50"
+                                />
+                            </div>
+
+                            <select
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                                className="w-full px-4 py-3 border border-blue-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition bg-white/50"
+                                required
+                            >
+                                <option value="student">Student</option>
+                                <option value="examiner">Examiner</option>
+                            </select>
+
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                type="submit"
+                                className="w-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center shadow-lg shadow-blue-200"
+                            >
+                                {isRegistering ? 'Create Account' : 'Sign In'}
+                                <ArrowRight className="ml-2" size={18} />
+                            </motion.button>
+
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                type="button"
+                                onClick={() => setIsRegistering(!isRegistering)}
+                                className="w-full text-blue-500 hover:text-blue-600 font-medium transition-colors"
+                            >
+                                {isRegistering ? 'Already have an account? Sign In' : "Don't have an account? Register"}
+                            </motion.button>
+                        </form>
                     </div>
-                )}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="text"
-                        placeholder="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    >
-                        <option value="student">student</option>
-                        <option value="examiner">examiner</option>
-                    </select>
-                    <button
-                        type="submit"
-                        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
-                    >
-                        {isRegistering ? 'Register' : 'Login'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setIsRegistering(!isRegistering)}
-                        className="w-full py-2 text-blue-600 font-medium hover:underline"
-                    >
-                        Switch to {isRegistering ? 'Login' : 'Register'}
-                    </button>
-                </form>
-            </div>
-        </div>
+                </div>
+            </motion.div>
+        </motion.div>
     );
 };
 
