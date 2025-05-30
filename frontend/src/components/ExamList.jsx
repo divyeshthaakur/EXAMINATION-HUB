@@ -15,7 +15,7 @@ const ExamList = () => {
   const fetchExams = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/exams', {
+      const response = await axios.get('https://examination-hub.onrender.com/api/exams', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setExams(response.data);
@@ -30,7 +30,7 @@ const ExamList = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `http://localhost:5000/api/exams/${examId}/status`,
+        `https://examination-hub.onrender.com/api/exams/${examId}/status`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

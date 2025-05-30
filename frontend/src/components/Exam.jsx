@@ -122,7 +122,7 @@ const Exam = () => {
             }
             
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/exams/submit', 
+            await axios.post('https://examination-hub.onrender.com/api/exams/submit', 
                 { 
                     examId: id, 
                     answers,
@@ -211,7 +211,7 @@ const Exam = () => {
         const fetchExam = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`http://localhost:5000/api/exams/${id}`, {
+                const response = await axios.get(`https://examination-hub.onrender.com/api/exams/${id}`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 
@@ -243,7 +243,7 @@ const Exam = () => {
         
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/exams/submit', 
+            await axios.post('https://examination-hub.onrender.com/api/exams/submit', 
                 { 
                     examId: id, 
                     answers,

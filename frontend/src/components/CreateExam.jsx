@@ -47,7 +47,7 @@ const CreateExam = () => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/exams', { title, questions }, {
+            await axios.post('https://examination-hub.onrender.com/api/exams', { title, questions }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSuccess(true);
