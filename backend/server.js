@@ -15,7 +15,7 @@ const app = express();
 
 app.use(cors({
 
-    origin: 'http://localhost:5173', 
+    origin: 'https://examination-hub.onrender.com', 
 
 }));
 app.use(express.json());
