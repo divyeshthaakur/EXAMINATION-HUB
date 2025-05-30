@@ -123,7 +123,7 @@ const Dashboard = () => {
                             </div>
                             <div>
                                 <p className="text-gray-600">Active Exams</p>
-                                <h3 className="text-2xl font-bold text-blue-800">{exams.filter(exam => exam.status === 'active').length}</h3>
+                                <h3 className="text-2xl font-bold text-blue-800">{exams?.filter(exam => exam.status === 'active').length}</h3>
                             </div>
                         </div>
                     </div>

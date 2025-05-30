@@ -23,7 +23,7 @@ const Results = () => {
                 });
                 
                 // Filter out results with null exam data
-                const validResults = resultsResponse.data.filter(result => result && result.exam);
+                const validResults = resultsResponse.data?.filter(result => result && result.exam);
                 
                 if (validResults.length !== resultsResponse.data.length) {
                     console.warn('Some results had missing exam data and were filtered out');
@@ -209,7 +209,7 @@ const Results = () => {
                                             <p className="text-sm font-medium text-gray-700">Passed</p>
                                         </div>
                                         <p className="text-2xl font-bold text-green-600">
-                                            {results.filter(r => r.passed).length}
+                                            {results?.filter(r => r.passed).length}
                                         </p>
                                     </div>
                                     <div className="bg-blue-50 p-4 rounded-lg">
@@ -218,7 +218,7 @@ const Results = () => {
                                             <p className="text-sm font-medium text-gray-700">Failed</p>
                                         </div>
                                         <p className="text-2xl font-bold text-red-600">
-                                            {results.filter(r => !r.passed).length}
+                                            {results?.filter(r => !r.passed).length}
                                         </p>
                                     </div>
                                 </div>
